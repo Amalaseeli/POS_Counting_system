@@ -2,3 +2,6 @@ opencv-python
 numpy
 ultralytics
 pyodbc
+pyautogui
+screeninfo
+pygetwindow

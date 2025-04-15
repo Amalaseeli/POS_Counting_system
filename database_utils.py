@@ -1,11 +1,16 @@
 import yaml
 import pyodbc
+import os
 
+
+base_dir = os.path.dirname(os.path.abspath(__file__))
+
+yaml_path = os.path.join(base_dir, 'db_cred.yaml')
 class DatabaseConnector:
     def read_yaml(self):
         try:
             # Attempt to read database credentials from the YAML file
-            with open('db_cred.yaml', 'r') as f:
+            with open(yaml_path, 'r') as f:
                 credentials = yaml.safe_load(f)
             return credentials
         except FileNotFoundError:

@@ -1,13 +1,13 @@
 from ultralytics import YOLO
 import cv2
 import os
-from save_to_db_retail import save_detected_product
+from save_to_db_security import save_detected_product
 import json
 import pyautogui
 import sys
-import time
 import pygetwindow as gw
 from screeninfo import get_monitors
+import time
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -15,18 +15,11 @@ model_path = os.path.join(base_dir, "pos.pt")
 
 # Load the model
 model = YOLO(model_path)
-
 # Open webcam
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
+cap.set(3, 640)  # Width
+cap.set(4, 480) 
 
-
-# Get window screen width, height
-screen_width , screen_height = pyautogui.size()
-
-video_width = screen_width //2
-aspect_ratio = 640/480
-#video_height = int(video_width/aspect_ratio)
-video_height = 700
 
 def move_cv2_window_to_third_screen(window_title):
     time.sleep(2)  # Let the window appear first
@@ -39,8 +32,8 @@ def move_cv2_window_to_third_screen(window_title):
             screen3_width = screen3.width
             screen3_height = screen3.height
 
-            # Position to RIGHT HALF of third screen
-            new_x = screen3.x + (screen3_width // 2)
+            # Position to LEFT HALF of third screen
+            new_x = screen3.x
             new_y = screen3.y
             new_width = screen3_width // 2
             new_height = screen3_height  # or set a fixed height if needed
@@ -53,9 +46,18 @@ def move_cv2_window_to_third_screen(window_title):
     except Exception as e:
         print("❌ Error moving OpenCV window:", e)
 
-# Load or define ROI (region of interest)
-roi_file =os.path.join(base_dir, "retail_area_roi.txt")
 
+
+# Get window screen width, height
+screen_width , screen_height = pyautogui.size()
+
+video_width = screen_width //2
+aspect_ratio = 640/480
+# video_height = int(video_width/aspect_ratio)
+video_height = 700
+
+# Load or define ROI (region of interest)
+roi_file = os.path.join(base_dir,"security_area_roi.txt")
 if os.path.exists(roi_file):
     with open(roi_file, 'r') as file:
         r = tuple(map(int, file.readline().split(',')))
@@ -65,7 +67,7 @@ else:
         print("Error: Failed to read frame")
         cap.release()
         cv2.destroyAllWindows()
-        exit()
+        sys.exit()
     cv2.namedWindow("Select the area")
     r = cv2.selectROI("Select the area", img, fromCenter=False, showCrosshair=True)
     cv2.destroyWindow("Select the area")
@@ -75,13 +77,11 @@ else:
 zone_left, zone_top, zone_width, zone_height = r
 zone_right = zone_left + zone_width
 zone_bottom = zone_top + zone_height
-
-
 cv2.namedWindow("Bagging Area", cv2.WINDOW_NORMAL)
 cv2.namedWindow("Bagging Area", cv2.WND_PROP_FULLSCREEN)
 cv2.setWindowProperty("Bagging Area", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-cv2.moveWindow("Bagging Area", screen_width//2, 0)    
-cv2.resizeWindow("Bagging Area", video_width, video_height)
+cv2.moveWindow("Bagging Area", 0, 0)    
+#cv2.resizeWindow("Bagging Area", video_width, video_height) 
 moved = False
 while True:
     ret, frame = cap.read()
@@ -116,7 +116,7 @@ while True:
 
     if not moved:
         move_cv2_window_to_third_screen("Bagging Area")
-        moved = True
+        moved = True  
     cv2.imshow("Bagging Area", frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break

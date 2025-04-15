@@ -16,27 +16,39 @@ def save_detected_product(json_txt):
         WHERE table_name = 'AITransactionCount'
         """)
         
-        # If the table does not exist, create it
-        if cursor.fetchone()[0] == 0:
+        table_exists = cursor.fetchone()[0] == 1
+
+        if not table_exists:
             print("Table 'AITransactionCount' not found. Creating table...")
             cursor.execute("""
             CREATE TABLE AITransactionCount (
-                
-                count NVARCHAR(MAX) NOT NULL
+                Security_area_count NVARCHAR(MAX) NOT NULL
             )
             """)
             print("Table 'AITransactionCount' created.")
-            
+
             cursor.execute("""
-            INSERT INTO AITransactionCount (count) 
+            INSERT INTO AITransactionCount (Security_area_count) 
             VALUES ('[]')  -- Empty JSON array as a placeholder
             """)
             conn.commit()
+        else:
+            # Check if column 'Security_area_count' exists
+            cursor.execute("""
+            SELECT COLUMN_NAME 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_NAME = 'AITransactionCount' AND COLUMN_NAME = 'Security_area_count'
+            """)
+            if cursor.fetchone() is None:
+                print("Column 'Security_area_count' not found. Adding column...")
+                cursor.execute("ALTER TABLE AITransactionCount ADD Security_area_count NVARCHAR(MAX)")
+                conn.commit()
+
             
         # Proceed with the update query
         query = """
         UPDATE AITransactionCount
-        SET count = ?
+        SET Security_area_count = ?
         """
         cursor.execute(query, (json_txt,))
         conn.commit()
